@@ -16,7 +16,7 @@
 
 `./USCGA_build.sh`
 
-## Manual Set uo
+## Manual Set up
 
 The following commands were used to install virtual box and deploy the lab enviroment.
 
