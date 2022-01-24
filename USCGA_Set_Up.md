@@ -1,6 +1,22 @@
-# Setting up Active Directory
+# Setting up Detection Labs for USCGA Cyber Team
 
  For the USCGA cyber team we currently utilize virtual box to host the virtualized enviroments. There are current plans to implement this using ESXi for long term but at the moment this is used for testing.
+
+## Automated Script
+
+* Change directories
+
+`cd DetectionLab/Vagrant/`
+
+* Change the permissions to make the file executable
+
+`chmod +x USCGA_build.sh`
+
+* Run the script!!!
+
+`./USCGA_build.sh`
+
+## Manual Set uo
 
 The following commands were used to install virtual box and deploy the lab enviroment.
 
