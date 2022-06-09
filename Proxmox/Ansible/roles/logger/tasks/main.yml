@@ -321,10 +321,13 @@
       mysql -uroot -pfleet -e "create database fleet;"
 
       # Always download the latest release of Fleet
-      curl -s https://api.github.com/repos/fleetdm/fleet/releases | grep 'https://github.com' | grep "/fleet.zip" | cut -d ':' -f 2,3 | tr -d '"' | tr -d ' '  | head -1 | wget --progress=bar:force -i -
-      unzip fleet.zip -d fleet
-      cp fleet/linux/fleetctl /usr/local/bin/fleetctl && chmod +x /usr/local/bin/fleetctl
-      cp fleet/linux/fleet /usr/local/bin/fleet && chmod +x /usr/local/bin/fleet
+      curl -s https://api.github.com/repos/fleetdm/fleet/releases | grep 'browser_download_url' | grep 'fleet_' | cut -d ':' -f 2,3 | tr -d '"' | tr -d ' '  | head -1 | wget --progress=bar:force -i - -O fleet.tar.gz
+      curl -s https://api.github.com/repos/fleetdm/fleet/releases | grep 'browser_download_url' | grep 'fleetctl_' | cut -d ':' -f 2,3 | tr -d '"' | tr -d ' '  | head -1 | wget --progress=bar:force -i - -O fleetctl.tar.gz
+      mkdir -p fleet
+      tar -xzf fleetctl.tar.gz -C fleet --strip-components 1
+      tar -xzf fleet.tar.gz -C fleet --strip-components 1
+      cp fleet/fleetctl /usr/local/bin/fleetctl && chmod +x /usr/local/bin/fleetctl
+      cp fleet/fleet /usr/local/bin/fleet && chmod +x /usr/local/bin/fleet
 
       # Prepare the DB
       fleet prepare db --mysql_address=127.0.0.1:3306 --mysql_database=fleet --mysql_username=root --mysql_password=fleet
@@ -350,12 +353,16 @@
 
       fleetctl config set --address https://0.0.0.0:8412
       fleetctl config set --tls-skip-verify true
-      fleetctl setup --email admin@detectionlab.network --username admin --password 'admin123#' --org-name DetectionLab
-      fleetctl login --email admin@detectionlab.network --password 'admin123#'
+      fleetctl setup --email admin@detectionlab.network --username admin --password 'Fl33tpassword!' --org-name DetectionLab
+      fleetctl login --email admin@detectionlab.network --password 'Fl33tpassword!'
 
       # Set the enrollment secret to match what we deploy to Windows hosts
-      mysql -uroot --password=fleet -e 'use fleet; update enroll_secrets set secret = "enrollmentsecret";'
-      echo "Updated enrollment secret"
+      # Set the enrollment secret to match what we deploy to Windows hosts
+      if mysql -uroot --password=fleet -e 'use fleet; INSERT INTO enroll_secrets(created_at, secret, team_id) VALUES ("2022-05-30 21:20:23", "enrollmentsecretenrollmentsecret", NULL);'; then
+        echo "Updated enrollment secret"
+      else
+        echo "Error adding the custom enrollment secret. This is going to cause problems with agent enrollment."
+      fi
     fi
   register: install_fleet
   changed_when: "'Updated enrollment secret' in install_fleet.stdout"
@@ -394,7 +401,7 @@
     # Dont log osquery INFO messages
     # Fix snapshot event formatting
     fleetctl get options > /tmp/options.yaml
-    /usr/bin/yq w -i /tmp/options.yaml 'spec.config.options.enroll_secret' 'enrollmentsecret'
+    /usr/bin/yq w -i /tmp/options.yaml 'spec.config.options.enroll_secret' 'enrollmentsecretenrollmentsecret'
     /usr/bin/yq w -i /tmp/options.yaml 'spec.config.options.logger_snapshot_event_type' 'true'
     fleetctl apply -f /tmp/options.yaml
 
